@@ -3,7 +3,7 @@
 require_once("database.php"); 
 
 try {
-	$results = $db->query('select * from entries');
+	$results = $db->query('select * from entries order by date desc');
 } catch(Exception $e) {
 	echo $e->getMessage();
 	die();
