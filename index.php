@@ -12,6 +12,7 @@
     </head>
     <body>
 		<?php include "inc/header.php"; ?>
+		<?php include "database.php"; ?>
         <section>
             <div class="container">
                 <div class="entry-list">
