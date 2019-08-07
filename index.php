@@ -1,3 +1,17 @@
+<?php 
+
+require_once("database.php"); 
+
+try {
+	$results = $db->query('select * from entries');
+} catch(Exception $e) {
+	echo $e->getMessage();
+	die();
+}
+
+$entries = $results->fetchAll(PDO::FETCH_ASSOC);
+
+?>
 <!DOCTYPE html>
 <html>
     <head>
@@ -12,26 +26,21 @@
     </head>
     <body>
 		<?php include "inc/header.php"; ?>
-		<?php include "database.php"; ?>
         <section>
             <div class="container">
                 <div class="entry-list">
-                    <article>
-                        <h2><a href="detail.html">The best day I’ve ever had</a></h2>
-                        <time datetime="2016-01-31">January 31, 2016</time>
-                    </article>
-                    <article>
-                        <h2><a href="detail_2.html">The absolute worst day I’ve ever had</a></h2>
-                        <time datetime="2016-01-31">January 31, 2016</time>
-                    </article>
-                    <article>
-                        <h2><a href="detail_3.html">That time at the mall</a></h2>
-                        <time datetime="2016-01-31">January 31, 2016</time>
-                    </article>
-                    <article>
-                        <h2><a href="detail_4.html">Dude, where’s my car?</a></h2>
-                        <time datetime="2016-01-31">January 31, 2016</time>
-                    </article>
+					<?php
+					
+					foreach($entries as $entry) {
+						$fullDate = date('F j, Y', strtotime($entry['date']));
+						echo <<<EOT
+						<article>
+							<h2><a href="detail.php?id={$entry['id']}">{$entry['title']}</a></h2>
+							<time datetime="{$entry['date']}">{$fullDate}</time>
+						</article>
+EOT;
+					}
+					?>
                 </div>
             </div>
         </section>
