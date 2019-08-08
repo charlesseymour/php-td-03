@@ -1,5 +1,7 @@
 <?php 
 
+session_start();
+
 require_once("database.php"); 
 
 if(!empty($_GET['id'])) {
@@ -18,6 +20,7 @@ try {
 $entry = $results->fetch(PDO::FETCH_ASSOC);
 
 ?>
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -34,13 +37,17 @@ $entry = $results->fetch(PDO::FETCH_ASSOC);
 		<?php include "inc/header.php"; ?>
         <section>
             <div class="container">
+			<?php if(isset($_SESSION['status']) && $_SESSION['status'] == 'success') {
+				echo '<h1 style="color: green; text-align: center;">Entry updated!</h1>';
+				unset($_SESSION['status']);
+			} ?>
                 <div class="entry-list single">
                     <article>
                         <h1><?php echo $entry["title"]; ?></h1>
                         <time datetime="2016-01-31"><?php echo(date('F j, Y', strtotime($entry['date']))); ?></time>
                         <div class="entry">
                             <h3>Time Spent: </h3>
-                            <p><?php echo($entry["id"]); ?></p>
+                            <p><?php echo($entry["time_spent"]); ?></p>
                         </div>
                         <div class="entry">
                             <h3>What I Learned:</h3>
@@ -54,7 +61,7 @@ $entry = $results->fetch(PDO::FETCH_ASSOC);
                 </div>
             </div>
             <div class="edit">
-                <p><a href="edit.html">Edit Entry</a></p>
+                <p><a href="edit.php?id=<?php echo($entry["id"]); ?>">Edit Entry</a></p>
             </div>
         </section>
         <?php include "inc/footer.php"; ?>
