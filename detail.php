@@ -40,29 +40,42 @@ $entry = $results->fetch(PDO::FETCH_ASSOC);
 			<?php if(isset($_SESSION['status'])) {
 				echo '<h1 style="color: green; text-align: center;">' . $_SESSION['status'] . '</h1>';
 				unset($_SESSION['status']);
-			} ?>
+			} 
+			
+			if ($entry) {
+				$date = date('F j, Y', strtotime($entry["date"]));
+				if (isset($entry["resources"])) { 
+					$resources = $entry["resources"]; }
+				echo <<<EOT
                 <div class="entry-list single">
                     <article>
-                        <h1><?php echo $entry["title"]; ?></h1>
-                        <time datetime="2016-01-31"><?php echo(date('F j, Y', strtotime($entry['date']))); ?></time>
+                        <h1>$entry[title]</h1>
+                        <time datetime="2016-01-31">{$date}</time>
                         <div class="entry">
                             <h3>Time Spent: </h3>
-                            <p><?php echo($entry["time_spent"]); ?></p>
+                            <p>$entry[time_spent]</p>
                         </div>
                         <div class="entry">
                             <h3>What I Learned:</h3>
-                            <p><?php echo($entry['learned']); ?></p>
+                            <p>$entry[learned]</p>
                         </div>
                         <div class="entry">
                             <h3>Resources to Remember:</h3>
-							<p><?php if (isset($entry['resources'])) { echo($entry['resources']); } ?></p>	
+							<p>$resources</p>	
                         </div>
                     </article>
                 </div>
-            </div>
-            <div class="edit">
-                <p><a href="edit.php?id=<?php echo($entry["id"]); ?>">Edit Entry</a></p>
-            </div>
+			</div>
+			<div class="edit">
+				<p><a href="edit.php?id=$entry[id]">Edit Entry</a></p>
+				<p><a href="delete.php?id=$entry[id]" onclick="return confirm('Are you sure?')">Delete Entry</a></p>
+			</div>
+EOT;
+			} else {
+				echo('<h2 style="text-align: center">Could not find that entry</h1><br>');
+			}
+				?>
+            
         </section>
         <?php include "inc/footer.php"; ?>
     </body>
