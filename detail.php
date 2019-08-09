@@ -37,8 +37,8 @@ $entry = $results->fetch(PDO::FETCH_ASSOC);
 		<?php include "inc/header.php"; ?>
         <section>
             <div class="container">
-			<?php if(isset($_SESSION['status']) && $_SESSION['status'] == 'success') {
-				echo '<h1 style="color: green; text-align: center;">Entry updated!</h1>';
+			<?php if(isset($_SESSION['status'])) {
+				echo '<h1 style="color: green; text-align: center;">' . $_SESSION['status'] . '</h1>';
 				unset($_SESSION['status']);
 			} ?>
                 <div class="entry-list single">
