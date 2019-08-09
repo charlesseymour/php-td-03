@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 			$update->bindParam(5, $resources);
 			$update->bindParam(6, $id);
 			$update->execute();
-			$_SESSION['status'] = "success";
+			$_SESSION['status'] = "Entry updated!";
 			header("Location: /detail.php?id=" . $id);
 			exit();
 		} catch (Exception $e) {
