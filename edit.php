@@ -67,34 +67,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <section>
             <div class="container">
                 <div class="edit-entry">
-					<?php if (isset($alert)) { echo $alert; } ?>
+					<?php if (isset($alert)) { echo $alert; } 
+					if ($entry) {
+						if (isset($_POST["title"])) { 
+							$temp_title = $_POST["title"];
+						} else { 
+							$temp_title = $entry["title"]; 
+						}
+						if (isset($_POST["date"])) { 
+							$temp_date = $_POST["date"];
+						} else { 
+							$temp_date = $entry["date"]; 
+						}
+						if (isset($_POST["timeSpent"])) { 
+							$temp_time = $_POST["timeSpent"];
+						} else { 
+							$temp_time = $entry["time_spent"]; 
+						}  
+						if (isset($_POST["whatILearned"])) { 
+							$temp_learned = $_POST["whatILearned"]; 
+						} else { 
+							$temp_learned = $entry["learned"]; 
+						}
+						if (isset($_POST["ResourcesToRemember"])) { 
+							$temp_resources = $_POST["ResourcesToRemember"];
+						} else {
+							$temp_resources = $entry["resources"]; 
+						}
+					echo <<< EOT
                     <h2>Edit Entry</h2>
-					<form action="edit.php?id=<?php echo($entry["id"]); ?>" method="post">
-						<input type="hidden" id="id" name="id" value="<?php echo($entry["id"]); ?>">
+					<form action="edit.php?id=$entry[id]" method="post">
+						<input type="hidden" id="id" name="id" value="$entry[id]">
                         <label for="title"> Title</label>
-                        <input id="title" type="text" name="title" value="<?php 
-							if (isset($_POST["title"])) { echo($_POST["title"]);
-							} else { echo($entry["title"]); }
-							?>"><br>
+                        <input id="title" type="text" name="title" value="{$temp_title}"><br>
                         <label for="date">Date</label>
-                        <input id="date" type="date" name="date" value="<?php
-							if (isset($_POST["date"])) { echo($_POST["date"]);
-							} else { echo($entry["date"]); } ?>"><br>
+                        <input id="date" type="date" name="date" value="{$temp_date}"><br>
                         <label for="time-spent"> Time Spent</label>
-                        <input id="time-spent" type="text" name="timeSpent"value="<?php 
-							if (isset($_POST["timeSpent"])) { echo($_POST["timeSpent"]);
-							} else { echo($entry["time_spent"]); } ?>"><br>
+                        <input id="time-spent" type="text" name="timeSpent" value="{$temp_time}"><br>
                         <label for="what-i-learned">What I Learned</label>
-                        <textarea id="what-i-learned" rows="5" name="whatILearned"><?php 
-							if (isset($_POST["whatILearned"])) { echo($_POST["whatILearned"]); 
-							} else { echo($entry["learned"]); } ?></textarea>
+                        <textarea id="what-i-learned" rows="5" name="whatILearned">{$temp_learned}</textarea>
                         <label for="resources-to-remember">Resources to Remember (optional)</label>
-                        <textarea id="resources-to-remember" rows="5" name="ResourcesToRemember"><?php 
-							if (isset($_POST["ResourcesToRemember"])) { echo($_POST["ResourcesToRemember"]) ;
-							} else { echo($entry["resources"]); } ?></textarea>
+                        <textarea id="resources-to-remember" rows="5" name="ResourcesToRemember">{$temp_resources}</textarea>
                         <input type="submit" value="Publish Entry" class="button">
-                        <a href="#" class="button button-secondary">Cancel</a>
+                        <a href="index.php" class="button button-secondary">Cancel</a>
                     </form>
+EOT;
+					} else {
+						echo('<h2 style="text-align: center;">Could not find that entry</h2>');
+					}
+					?>
                 </div>
             </div>
         </section>
