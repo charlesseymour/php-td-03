@@ -61,7 +61,7 @@ $entry = $results->fetch(PDO::FETCH_ASSOC);
                         </div>
                         <div class="entry">
                             <h3>Resources to Remember:</h3>
-							<p>$resources</p>	
+							<p>$entry[resources]</p>	
                         </div>
                     </article>
                 </div>
