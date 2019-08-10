@@ -182,6 +182,29 @@ ul li a {
 	font-size: 18px;
 }
 
+.tag-container {
+	margin-top: 3px;
+}
+
+.tag {
+	color: white;
+	font-size: 12px;
+	padding: 3px;
+	background-color: Silver;
+	border-radius: 3px;
+	margin-right: 3px;
+}
+
+.tag-label {
+	font-size: 12px;
+	padding: 3px;
+}
+
+span > a, span > a:link, span > a:hover, span > a:visited, span > a:active {
+	text-decoration: none; 
+	color: white;
+}
+
 
 
 /* ==========================================================================

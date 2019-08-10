@@ -30,15 +30,35 @@ $entries = $results->fetchAll(PDO::FETCH_ASSOC);
             <div class="container">
                 <div class="entry-list">
 					<?php
-					
 					foreach($entries as $entry) {
 						$fullDate = date('F j, Y', strtotime($entry['date']));
+						try {
+							$results = $db->prepare('select tag from entries
+												   join entries_tags on entries.id = entries_tags.entry_id
+												   join tags on entries_tags.tag_id = tags.id
+												   where entries.id = ?');
+							$results->bindParam(1, $entry['id']);
+							$results->execute();
+							} catch(Exception $e) {
+								echo $e->getMessage();
+								die();
+						}
+						$tags = $results->fetchAll(PDO::FETCH_ASSOC);
 						echo <<<EOT
 						<article>
 							<h2><a href="detail.php?id={$entry['id']}">{$entry['title']}</a></h2>
 							<time datetime="{$entry['date']}">{$fullDate}</time>
-						</article>
 EOT;
+						if (!empty($tags)) {
+							echo '<div class="tag-container"><span class="tag-label">tags:</span>';
+							foreach($tags as $tag) {
+								echo '<span class="tag"><a href="index.php?search=' . $tag["tag"] .
+								'">' . $tag["tag"] . '</a></span>';
+							}
+							echo('</div>');
+						}
+						
+						echo '</article>';
 					}
 					?>
                 </div>
