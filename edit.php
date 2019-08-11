@@ -9,7 +9,10 @@ if(!empty($_GET['id'])) {
 }
 
 try {
-	$results = $db->prepare('select * from entries where id = ?');
+	$results = $db->prepare('select * from entries
+							join entries_tags on entries.id = entries_tags.entry_id
+							join tags on entries_tags.tag_id = tags.id
+							where entries.id = ?');
 	$results->bindParam(1, $entry_id);
 	$results->execute();
 } catch(Exception $e) {
@@ -17,7 +20,8 @@ try {
 	die();
 }
 
-$entry = $results->fetch(PDO::FETCH_ASSOC);
+$entry_rows = $results->fetchAll(PDO::FETCH_ASSOC);
+var_dump($entry_rows);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
@@ -26,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$time_spent = filter_input(INPUT_POST, 'timeSpent', FILTER_SANITIZE_NUMBER_INT);
 	$learned = filter_input(INPUT_POST, 'whatILearned', FILTER_SANITIZE_STRING);
 	$resources = filter_input(INPUT_POST, 'ResourcesToRemember', FILTER_SANITIZE_STRING);
+	$tags = filter_input(INPUT_POST, 'tags', FILTER_SANITIZE_STRING);
 	
 	if (empty($id) || empty($title) || empty($date) || empty($time_spent) || empty($learned)) {
 		$alert = '<p style="color:red">Please fill in all required fields.</p>';
@@ -40,6 +45,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 			$update->bindParam(5, $resources);
 			$update->bindParam(6, $id);
 			$update->execute();
+			$tags_array = explode(" ", $tags);
+			foreach ($tags_array as $tag_string) {
+				$tag_string = trim($tag_string);
+				$tag_add = $db->prepare('INSERT OR IGNORE INTO tags (tag) values (?)');
+				$tag_add->bindParam(1, $tag_string);
+				$tag_add->execute();
+				$tag_entry_add = $db->prepare('INSERT OR IGNORE INTO entries_tags (entry_id, tag_id) values (?, ?)');
+				$tag_entry_add->bindParam(1, $id);
+				foreach ($entry_rows as $row) {
+					if ($row["tag"] === $tag_string) {
+						$tag_entry_add->bindParam(2, $row["tag_id"]);
+					}
+				}
+				$tag_entry_add->execute(); 
+			}
+			$inQuery = implode(',', array_fill(0, count($tags_array), '?'));
+			$tag_entry_delete = $db->prepare('DELETE FROM entries_tags WHERE tag_id NOT IN (
+													SELECT id FROM tags WHERE tag IN' . $inQuery . '))');
+			foreach ($tags_array as $k=> $tag_array) {
+				$tag_entry_delete->bindParam($tag_array);
+			}
+			$tag_entry_delete->execute();												
 			$_SESSION['status'] = "Entry updated!";
 			header("Location: /detail.php?id=" . $id);
 			exit();
@@ -68,31 +95,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="container">
                 <div class="edit-entry">
 					<?php if (isset($alert)) { echo $alert; } 
-					if ($entry) {
+					if ($entry_rows) {
 						if (isset($_POST["title"])) { 
 							$temp_title = $_POST["title"];
 						} else { 
-							$temp_title = $entry["title"]; 
+							$temp_title = $entry_rows[0]["title"]; 
 						}
 						if (isset($_POST["date"])) { 
 							$temp_date = $_POST["date"];
 						} else { 
-							$temp_date = $entry["date"]; 
+							$temp_date = $entry_rows[0]["date"]; 
 						}
 						if (isset($_POST["timeSpent"])) { 
 							$temp_time = $_POST["timeSpent"];
 						} else { 
-							$temp_time = $entry["time_spent"]; 
+							$temp_time = $entry_rows[0]["time_spent"]; 
 						}  
 						if (isset($_POST["whatILearned"])) { 
 							$temp_learned = $_POST["whatILearned"]; 
 						} else { 
-							$temp_learned = $entry["learned"]; 
+							$temp_learned = $entry_rows[0]["learned"]; 
 						}
 						if (isset($_POST["ResourcesToRemember"])) { 
 							$temp_resources = $_POST["ResourcesToRemember"];
 						} else {
-							$temp_resources = $entry["resources"]; 
+							$temp_resources = $entry_rows[0]["resources"]; 
+						}
+						if (isset($_POST["tags"])) { 
+							$temp_tags = $_POST["tags"];
+						} else {
+							$temp_tags = $entry_rows[0]["tags"]; 
 						}
 					echo <<< EOT
                     <h2>Edit Entry</h2>
@@ -108,7 +140,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <textarea id="what-i-learned" rows="5" name="whatILearned">{$temp_learned}</textarea>
                         <label for="resources-to-remember">Resources to Remember (optional)</label>
                         <textarea id="resources-to-remember" rows="5" name="ResourcesToRemember">{$temp_resources}</textarea>
-                        <input type="submit" value="Publish Entry" class="button">
+                        <label for="tags">Tags (optional; separate tags with single space)</label>
+						<input id="tags" type="text" name="tags" value="{$temp_tags}"><br>
+						<input type="submit" value="Publish Entry" class="button">
                         <a href="index.php" class="button button-secondary">Cancel</a>
                     </form>
 EOT;
