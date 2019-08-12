@@ -11,18 +11,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$time_spent = filter_input(INPUT_POST, 'timeSpent', FILTER_SANITIZE_NUMBER_INT);
 	$learned = filter_input(INPUT_POST, 'whatILearned', FILTER_SANITIZE_STRING);
 	$resources = filter_input(INPUT_POST, 'ResourcesToRemember', FILTER_SANITIZE_STRING);
+	$tags = filter_input(INPUT_POST, 'tags', FILTER_SANITIZE_STRING);
 	
 	if (empty($title) || empty($date) || empty($time_spent) || empty($learned)) {
 		$alert = '<p style="color:red">Please fill in all required fields.</p>';
 	} else {
 		try {
-			$add = $db->prepare('INSERT INTO entries (title, date, time_spent, learned, resources)
-				                VALUES (?, ?, ?, ?, ?)');
+			$add = $db->prepare('INSERT INTO entries (title, date, time_spent, learned, resources, tags)
+				                VALUES (?, ?, ?, ?, ?, ?)');
 			$add->bindParam(1, $title);
 			$add->bindParam(2, $date);
 			$add->bindParam(3, $time_spent);
 			$add->bindParam(4, $learned);
 			$add->bindParam(5, $resources);
+			$add->bindParam(6, $tags);
 			$add->execute();
 			$_SESSION['status'] = "Entry added!";
 			$results = $db->query('SELECT last_insert_rowid()');
@@ -74,7 +76,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <label for="resources-to-remember">Resources to Remember (optional)</label>
                         <textarea id="resources-to-remember" rows="5" name="ResourcesToRemember"><?php 
 							if (isset($_POST["ResourcesToRemember"])) { echo($_POST['ResourcesToRemember']); } ?></textarea>
-                        <input type="submit" value="Publish Entry" class="button">
+                        <label for="tags">Tags (optional, separate with space)</label>
+						<input id="tags" type="text" name="tags" <?php
+							if (isset($_POST["tags"])) { echo('value="' . $_POST["tags"] . '"'); } ?>>
+							<br>
+						<input type="submit" value="Publish Entry" class="button">
                         <a href="#" class="button button-secondary">Cancel</a>
                     </form>
                 </div>

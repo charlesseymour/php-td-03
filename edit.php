@@ -26,19 +26,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$time_spent = filter_input(INPUT_POST, 'timeSpent', FILTER_SANITIZE_NUMBER_INT);
 	$learned = filter_input(INPUT_POST, 'whatILearned', FILTER_SANITIZE_STRING);
 	$resources = filter_input(INPUT_POST, 'ResourcesToRemember', FILTER_SANITIZE_STRING);
+	$tags = filter_input(INPUT_POST, 'tags', FILTER_SANITIZE_STRING);
 	
 	if (empty($id) || empty($title) || empty($date) || empty($time_spent) || empty($learned)) {
 		$alert = '<p style="color:red">Please fill in all required fields.</p>';
 	} else {
 		try {
 			$update = $db->prepare('UPDATE entries SET title = ?, date = ?, time_spent = ?,
-				   learned = ?, resources = ? WHERE id = ?');
+				   learned = ?, resources = ?, tags = ? WHERE id = ?');
 			$update->bindParam(1, $title);
 			$update->bindParam(2, $date);
 			$update->bindParam(3, $time_spent);
 			$update->bindParam(4, $learned);
 			$update->bindParam(5, $resources);
-			$update->bindParam(6, $id);
+			$update->bindParam(6, $tags);
+			$update->bindParam(7, $id);
 			$update->execute();
 			$_SESSION['status'] = "Entry updated!";
 			header("Location: /detail.php?id=" . $id);
@@ -94,6 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 						} else {
 							$temp_resources = $entry["resources"]; 
 						}
+						if (isset($_POST["tags"])) {
+							$temp_tags = $_POST["tags"];
+						} else {
+							$temp_tags = $entry["tags"];
+						}
 					echo <<< EOT
                     <h2>Edit Entry</h2>
 					<form action="edit.php?id=$entry[id]" method="post">
@@ -108,8 +115,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <textarea id="what-i-learned" rows="5" name="whatILearned">{$temp_learned}</textarea>
                         <label for="resources-to-remember">Resources to Remember (optional)</label>
                         <textarea id="resources-to-remember" rows="5" name="ResourcesToRemember">{$temp_resources}</textarea>
-                        <input type="submit" value="Publish Entry" class="button">
-                        <a href="index.php" class="button button-secondary">Cancel</a>
+                        <label for="tags">Tags (optional, separate with space)</label>
+						<input id="tags" type="text" name="tags" value="{$temp_tags}"</textarea>
+						<input type="submit" value="Publish Entry" class="button">
+						<a href="index.php" class="button button-secondary">Cancel</a>
                     </form>
 EOT;
 					} else {

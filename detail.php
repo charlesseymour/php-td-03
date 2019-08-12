@@ -51,6 +51,19 @@ $entry = $results->fetch(PDO::FETCH_ASSOC);
                     <article>
                         <h1>$entry[title]</h1>
                         <time datetime="2016-01-31">{$date}</time>
+EOT;
+				if (!empty($entry["tags"])) {
+					$tags = explode(" ", $entry["tags"]);
+					echo '<div class="tag-container"><span class="tag-label">tags:</span>';
+					foreach($tags as $tag) {
+						$tag = trim($tag);
+						echo '<span class="tag"><a href="index.php?tag=' . $tag .
+						'">' . $tag . '</a></span>';
+					}
+					echo('</div>');
+				};
+				
+				echo <<<EOT
                         <div class="entry">
                             <h3>Time Spent: </h3>
                             <p>$entry[time_spent]</p>
