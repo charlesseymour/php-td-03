@@ -10,8 +10,8 @@ if(!empty($_GET['id'])) {
 
 try {
 	$results = $db->prepare('select * from entries
-							join entries_tags on entries.id = entries_tags.entry_id
-							join tags on entries_tags.tag_id = tags.id
+							left join entries_tags on entries.id = entries_tags.entry_id
+							left join tags on entries_tags.tag_id = tags.id
 							where entries.id = ?');
 	$results->bindParam(1, $entry_id);
 	$results->execute();
@@ -19,6 +19,7 @@ try {
 	echo $e->getMessage();
 	die();
 }
+
 $entry_rows = $results->fetchAll(PDO::FETCH_ASSOC);
 //echo($entry_rows[0]["entry_id"]);
 //var_dump($entry_rows);
