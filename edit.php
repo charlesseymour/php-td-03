@@ -5,7 +5,7 @@ session_start();
 require_once("database.php"); 
 
 if(!empty($_GET['id'])) {
-	$entry_id = intval($_GET['id']);
+	$id = intval($_GET['id']);
 }
 
 try {
@@ -13,7 +13,7 @@ try {
 							left join entries_tags on entries.id = entries_tags.entry_id
 							left join tags on entries_tags.tag_id = tags.id
 							where entries.id = ?');
-	$results->bindParam(1, $entry_id);
+	$results->bindParam(1, $id);
 	$results->execute();
 } catch(Exception $e) {
 	echo $e->getMessage();
@@ -21,8 +21,6 @@ try {
 }
 
 $entry_rows = $results->fetchAll(PDO::FETCH_ASSOC);
-//echo($entry_rows[0]["entry_id"]);
-//var_dump($entry_rows);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
@@ -48,37 +46,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 			$update->execute();
 			$tags = trim($tags);
 			$tags = preg_replace('/\s+/', ' ', $tags);
-			//echo('$tags = ' . $tags);
 			$tags_array = explode(" ", $tags);
-			//echo('$tags_array = ');
-			//var_dump($tags_array);
+			echo('$tags_array = <br>');
+			var_dump($tags_array);
+			echo('<br>');
 			foreach ($tags_array as $tag_string) {
 				$tag_string = trim($tag_string);
-				//echo('$tag_string = ' . $tag_string);
-				$tag_add = $db->prepare('INSERT OR IGNORE INTO tags (tag) VALUES (?)');
-				$tag_add->bindParam(1, $tag_string);
-				$tag_add->execute();
-				$tag_query = $db->prepare('SELECT * FROM tags WHERE tag = ?');
-				$tag_query->bindParam(1, $tag_string);
-				$tag_query->execute();
-				$matching_tag = $tag_query->fetch(PDO::FETCH_ASSOC);
-				//var_dump($matching_tag);
-				$tag_id = $matching_tag["id"];
-				$tag_entry_add = $db->prepare('INSERT OR IGNORE INTO entries_tags (entry_id, tag_id) VALUES (?, ?)');
-				$tag_entry_add->bindParam(1, $id);
-				$tag_entry_add->bindParam(2, $tag_id);
-				$tag_entry_add->execute(); 
+				if ($tag_string && $tag_string !== " ") {
+					$tag_add = $db->prepare('INSERT OR IGNORE INTO tags (tag) VALUES (?)');
+					$tag_add->bindParam(1, $tag_string);
+					$tag_add->execute();
+					$tag_query = $db->prepare('SELECT * FROM tags WHERE tag = ?');
+					$tag_query->bindParam(1, $tag_string);
+					$tag_query->execute();
+					$matching_tag = $tag_query->fetch(PDO::FETCH_ASSOC);
+					$tag_id = $matching_tag["id"];
+					$tag_entry_add = $db->prepare('INSERT OR IGNORE INTO entries_tags (entry_id, tag_id) VALUES (?, ?)');
+					$tag_entry_add->bindParam(1, $id);
+					$tag_entry_add->bindParam(2, $tag_id);
+					$tag_entry_add->execute(); 
+				}
 			}
-			$inQuery = implode(',', array_fill(0, count($tags_array), '?'));
-			var_dump($inQuery);
+			$placeholders = implode(',', array_fill(0, count($tags_array), '?'));
 			$tag_entry_delete = $db->prepare('DELETE FROM entries_tags WHERE tag_id NOT IN (
-													SELECT id FROM tags WHERE tag IN (' . $inQuery . '))');
-			foreach ($tags_array as $k=> $tag_array) {
-				$tag_entry_delete->bindParam($tag_array);
+												SELECT id FROM tags WHERE tag IN (' . $placeholders . '))');
+			foreach ($tags_array as $k => &$tag_string) {
+				$tag_entry_delete->bindParam($k + 1, $tag_string);
+
 			}
 			$tag_entry_delete->execute();											
 			$_SESSION['status'] = "Entry updated!";
-			header("Location: /detail.php?id=" . $entry_rows[0]["entry_id"]);
+			header("Location: /detail.php?id=" . $id);
 			exit();
 		} catch (Exception $e) {
 			echo('<p style="color:red">'.$e->getMessage().'</p>');
@@ -106,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="edit-entry">
 					<?php if (isset($alert)) { echo $alert; } 
 					if ($entry_rows) {
-						$id = $entry_rows[0]["entry_id"];
+						//$id = $entry_rows[0]["id"];
 						if (isset($_POST["title"])) { 
 							$temp_title = $_POST["title"];
 						} else { 
