@@ -68,11 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 				}
 			}
 			$placeholders = implode(',', array_fill(0, count($tags_array), '?'));
-			$tag_entry_delete = $db->prepare('DELETE FROM entries_tags WHERE tag_id NOT IN (
+			$tag_entry_delete = $db->prepare('DELETE FROM entries_tags WHERE entry_id == ?
+											  AND tag_id NOT IN (
 												SELECT id FROM tags WHERE tag IN (' . $placeholders . '))');
+			$tag_entry_delete->bindParam(1, $id);
 			foreach ($tags_array as $k => &$tag_string) {
-				$tag_entry_delete->bindParam($k + 1, $tag_string);
-
+				$tag_entry_delete->bindParam($k + 2, $tag_string);
 			}
 			$tag_entry_delete->execute();											
 			$_SESSION['status'] = "Entry updated!";
