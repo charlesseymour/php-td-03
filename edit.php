@@ -44,18 +44,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 			$update->bindParam(5, $resources);
 			$update->bindParam(6, $id);
 			$update->execute();
+			// Add any tags that don't already exist to the tags table
+			// Trim leading and trailing spaces
 			$tags = trim($tags);
+			// Remove any excess internal spaces
 			$tags = preg_replace('/\s+/', ' ', $tags);
+			// Create an array of single tags from the tags string
 			$tags_array = explode(" ", $tags);
-			echo('$tags_array = <br>');
-			var_dump($tags_array);
-			echo('<br>');
+			// Loop through array of tags and add to tags table if they don't exist
 			foreach ($tags_array as $tag_string) {
 				$tag_string = trim($tag_string);
 				if ($tag_string && $tag_string !== " ") {
 					$tag_add = $db->prepare('INSERT OR IGNORE INTO tags (tag) VALUES (?)');
 					$tag_add->bindParam(1, $tag_string);
 					$tag_add->execute();
+					// Create a row in the entries_tags table linking the tag with the entry
 					$tag_query = $db->prepare('SELECT * FROM tags WHERE tag = ?');
 					$tag_query->bindParam(1, $tag_string);
 					$tag_query->execute();
