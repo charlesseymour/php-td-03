@@ -6,21 +6,24 @@ if(!empty($_GET['id'])) {
 	$entry_id = intval($_GET['id']);
 }
 
-$check_entry = $db->prepare('SELECT * FROM entries WHERE id = ?');
+/*$check_entry = $db->prepare('SELECT * FROM entries WHERE id = ?');
 $check_entry->bindParam(1, $entry_id);
-$check_entry->execute();
-
-
+$check_entry->execute();*/
 
 try {
 	$results = $db->prepare('DELETE FROM entries WHERE id = ?');
 	$results->bindParam(1, $entry_id);
 	$results->execute();
+	// get associated entries_tags rows and delete
+	// (Tried setting the columns in entries_tags table 
+	// to ON DELETE CASCADE but that didn't work-- any suggestions?)
+	$entries_tags_delete = $db->prepare('DELETE FROM entries_tags WHERE entry_id = ?');
+	$entries_tags_delete->bindParam(1, $entry_id);
+	$entries_tags_delete->execute();
 } catch(Exception $e) {
 	echo $e->getMessage();
 	die();
 }
-
 
 ?>
 
