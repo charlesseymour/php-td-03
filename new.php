@@ -2,8 +2,9 @@
 
 session_start();
 
-require_once("database.php"); 
+require_once("inc/database.php"); 
 
+// Get POST data to fill into the INSERT statement
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
 	$title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_STRING);
@@ -13,10 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$resources = filter_input(INPUT_POST, 'ResourcesToRemember', FILTER_SANITIZE_STRING);
 	$tags = filter_input(INPUT_POST, 'tags', FILTER_SANITIZE_STRING);
 	
+	// Alert user to empty required fields
 	if (empty($title) || empty($date) || empty($time_spent) || empty($learned)) {
 		$alert = '<p style="color:red">Please fill in all required fields.</p>';
 	} else {
 		try {
+			// add new entry
 			$add = $db->prepare('INSERT INTO entries (title, date, time_spent, learned, resources)
 				                VALUES (?, ?, ?, ?, ?)');
 			$add->bindParam(1, $title);
@@ -57,9 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 				}
 			}
 			$_SESSION['status'] = "Entry added!";
-			/*$results = $db->query('SELECT last_insert_rowid()');
-			$new_entry_id = $results->fetch(PDO::FETCH_NUM);
-			var_dump($new_entry_id[0]);*/
 			header("Location: /detail.php?id=" . $entry_id);
 			exit();
 		} catch (Exception $e) {

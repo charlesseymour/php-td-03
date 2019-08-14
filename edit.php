@@ -2,12 +2,14 @@
 
 session_start();
 
-require_once("database.php"); 
+require_once("inc/database.php"); 
 
+//  make sure id value in the query string is an integer
 if(!empty($_GET['id'])) {
 	$id = intval($_GET['id']);
 }
 
+// retrieve entry to be edited along with associated rows from the tags table
 try {
 	$results = $db->prepare('select * from entries
 							left join entries_tags on entries.id = entries_tags.entry_id
@@ -22,6 +24,8 @@ try {
 
 $entry_rows = $results->fetchAll(PDO::FETCH_ASSOC);
 
+// if the request method is post, then the user has left a required field blank
+// Get the previous post data and populate the form so the user doesn't have to retype
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
 	$title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_STRING);
@@ -31,10 +35,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$resources = filter_input(INPUT_POST, 'ResourcesToRemember', FILTER_SANITIZE_STRING);
 	$tags = filter_input(INPUT_POST, 'tags', FILTER_SANITIZE_STRING);
 	
+	// Alert user to empty required fields
 	if (empty($id) || empty($title) || empty($date) || empty($time_spent) || empty($learned)) {
 		$alert = '<p style="color:red">Please fill in all required fields.</p>';
 	} else {
 		try {
+			// Update entry row with new data except for tags field
 			$update = $db->prepare('UPDATE entries SET title = ?, date = ?, time_spent = ?,
 				   learned = ?, resources = ? WHERE id = ?');
 			$update->bindParam(1, $title);
@@ -59,6 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 					$tag_add->bindParam(1, $tag_string);
 					$tag_add->execute();
 					// Create a row in the entries_tags table linking the tag with the entry
+					// ***(I tried combining the two queries below using a subquery, but bindParam
+					//  didn't seem to work with it -- any suggestions?)***
 					$tag_query = $db->prepare('SELECT * FROM tags WHERE tag = ?');
 					$tag_query->bindParam(1, $tag_string);
 					$tag_query->execute();
@@ -70,15 +78,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 					$tag_entry_add->execute(); 
 				}
 			}
+			// If any tags were removed, remove the corresponding rows from entries_tags
+			// Create placeholder string with requisite number of question marks for bindParam
 			$placeholders = implode(',', array_fill(0, count($tags_array), '?'));
+			// Concatenate placeholder string into prepared statement
 			$tag_entry_delete = $db->prepare('DELETE FROM entries_tags WHERE entry_id == ?
 											  AND tag_id NOT IN (
 												SELECT id FROM tags WHERE tag IN (' . $placeholders . '))');
 			$tag_entry_delete->bindParam(1, $id);
+			// Loop through posted tags and bind to placeholders
 			foreach ($tags_array as $k => &$tag_string) {
 				$tag_entry_delete->bindParam($k + 2, $tag_string);
 			}
-			$tag_entry_delete->execute();											
+			$tag_entry_delete->execute();
+			// Add status message to session and redirect to detail page for edited entry
 			$_SESSION['status'] = "Entry updated!";
 			header("Location: /detail.php?id=" . $id);
 			exit();
@@ -106,9 +119,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <section>
             <div class="container">
                 <div class="edit-entry">
-					<?php if (isset($alert)) { echo $alert; } 
+					<?php 
+					// Display missing field alert if applicable
+					if (isset($alert)) { echo $alert; } 
+					// Populate the fields with previously posted data if available,
+					// else use data in database
 					if ($entry_rows) {
-						//$id = $entry_rows[0]["id"];
 						if (isset($_POST["title"])) { 
 							$temp_title = $_POST["title"];
 						} else { 
@@ -143,6 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 								$temp_tags .= " "; 
 							}
 						}
+					// Generate html to display form and prepopulate with temporary data
 					echo <<< EOT
                     <h2>Edit Entry</h2>
 					<form action="edit.php?id=$id" method="post">

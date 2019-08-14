@@ -1,7 +1,8 @@
 <?php 
 
-require_once("database.php"); 
+require_once("inc/database.php"); 
 
+// If tag value in the URL, get only those entries associated with the tag
 if (isset($_GET["tag"])) {
 	try {
 		$results = $db->prepare('select entries.id, title, date from entries
@@ -14,6 +15,7 @@ if (isset($_GET["tag"])) {
 		echo $e->getMessage();
 		die();
 	}
+// else get all entries
 } else {
 	try {
 		$results = $db->query('select * from entries order by date desc');
@@ -44,11 +46,15 @@ $entries = $results->fetchAll(PDO::FETCH_ASSOC);
             <div class="container">
                 <div class="entry-list">
 					<?php 
+					// If list is filtered by tag, include a heading to that effect
 					if (isset($_GET["tag"])) {
 						echo '<h3 style="text-align: center">Entries tagged "' . $_GET["tag"] . '"</h3><br>';
 					}
+					// Loop through entries and generate html to display details
 					foreach($entries as $entry) {
+						// format date
 						$fullDate = date('F j, Y', strtotime($entry['date']));
+						// retrieve associated tags
 						try {
 							$results = $db->prepare('select tag, tags.id from entries
 												   join entries_tags on entries.id = entries_tags.entry_id
@@ -61,6 +67,7 @@ $entries = $results->fetchAll(PDO::FETCH_ASSOC);
 							die();
 						}
 						$tags = $results->fetchAll(PDO::FETCH_ASSOC);
+						// create html string
 						echo <<<EOT
 						<article>
 							<h2><a href="detail.php?id={$entry['id']}">{$entry['title']}</a></h2>

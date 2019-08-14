@@ -1,13 +1,16 @@
 <?php 
 
+// start session for preserving status messages
 session_start();
 
-require_once("database.php"); 
+require_once("inc/database.php"); 
 
+// make sure id value in the query string is an integer
 if(!empty($_GET['id'])) {
 	$entry_id = intval($_GET['id']);
 }
 
+// retrieve entry
 try {
 	$results = $db->prepare('select * from entries where id = ?');
 	$results->bindParam(1, $entry_id);
@@ -37,15 +40,20 @@ $entry = $results->fetch(PDO::FETCH_ASSOC);
 		<?php include "inc/header.php"; ?>
         <section>
             <div class="container">
-			<?php if(isset($_SESSION['status'])) {
+			<?php 
+			// display any status message
+			if(isset($_SESSION['status'])) {
 				echo '<h1 style="color: green; text-align: center;">' . $_SESSION['status'] . '</h1>';
 				unset($_SESSION['status']);
 			} 
-			
+			// display entry details
 			if ($entry) {
+				// format date
 				$date = date('F j, Y', strtotime($entry["date"]));
+				// retrieve resources
 				if (isset($entry["resources"])) { 
 					$resources = $entry["resources"]; }
+				// retrieve tags
 				try {
 					$tag_search = $db->query('SELECT tag FROM tags JOIN entries_tags ON tags.id = entries_tags.tag_id
 																   JOIN entries ON entries_tags.entry_id = entries.id
@@ -56,6 +64,7 @@ $entry = $results->fetch(PDO::FETCH_ASSOC);
 					echo $e->getMessage();
 					die();
 				}
+				// generate html string for entry details
 				echo <<<EOT
                 <div class="entry-list single">
                     <article>
