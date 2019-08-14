@@ -46,11 +46,33 @@ $entry = $results->fetch(PDO::FETCH_ASSOC);
 				$date = date('F j, Y', strtotime($entry["date"]));
 				if (isset($entry["resources"])) { 
 					$resources = $entry["resources"]; }
+				try {
+					$tag_search = $db->query('SELECT tag FROM tags JOIN entries_tags ON tags.id = entries_tags.tag_id
+																   JOIN entries ON entries_tags.entry_id = entries.id
+																   WHERE entries.id = ' . $entry["id"]);
+					$tag_search->execute();
+					$tags = $tag_search->fetchAll(PDO::FETCH_ASSOC);
+				} catch (Exception $e) {
+					echo $e->getMessage();
+					die();
+				}
 				echo <<<EOT
                 <div class="entry-list single">
                     <article>
                         <h1>$entry[title]</h1>
                         <time datetime="2016-01-31">{$date}</time>
+EOT;
+						
+						if (!empty($tags)) {
+							echo '<div class="tag-container"><span class="tag-label">tags:</span>';
+							foreach($tags as $tag) {
+								echo '<span class="tag"><a href="index.php?tag=' . $tag["tag"] .
+								'">' . $tag["tag"] . '</a></span>';
+							}
+							echo('</div>');
+						}
+						
+				echo <<<EOT
                         <div class="entry">
                             <h3>Time Spent: </h3>
                             <p>$entry[time_spent]</p>
